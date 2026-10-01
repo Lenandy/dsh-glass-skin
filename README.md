@@ -28,28 +28,17 @@ dsh plugin --profile web add github:Lenandy/dsh-glass-skin
 
 也可以打开页面上的**插件管理 → 添加插件**，把同一个地址粘进去。
 
-<details>
-<summary>怎么确认装上了 / 用的是别的 profile / 卸载</summary>
+> 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
 
-装上了的样子：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
-
-如果你用的不是 `desktop` 或 `web`（自建的 profile、TUI 等），从进程命令行里读它**实际加载**的那个名字——
-`--profile` 是必填项，填的就是这里读出来的值：
-
-```powershell
-Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
-  ForEach-Object { [regex]::Match([string]$_.CommandLine, 'profiles\\(\S+)').Groups[1].Value }
-```
-
-卸载（把名字换成你装的那个）：
+## 卸载
 
 ```sh
-dsh plugin --profile web remove dsh-glass-skin
+dsh plugin --profile desktop remove dsh-glass-skin
 ```
 
-</details>
+装到 `web` 的就换成 `--profile web`。和安装一样，**重启 DSH 后生效**。
 
-> 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
+皮肤的设置存在浏览器本地，不会跟着卸载被清掉——想一并清空，重装一次后在控制台点「重置」。
 
 ## 特性
 
