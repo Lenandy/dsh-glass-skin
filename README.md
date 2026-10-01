@@ -10,33 +10,41 @@ DSH（DeepSeek Harness）Web UI 的**页面级玻璃皮肤**：会话画布与�
 
 ## 安装
 
+**桌面客户端**（`DeepSeek Harness.exe`）用 `desktop`：
+
 ```sh
-dsh plugin --profile <profile> add github:Lenandy/dsh-glass-skin
+dsh plugin --profile desktop add github:Lenandy/dsh-glass-skin
 ```
 
-也可以打开页面上的**插件管理 → 添加插件**，把上面那个地址粘进去。
+**浏览器 / 命令行**（`dsh web`）用 `web`：
 
-两件必须注意的事：
+```sh
+dsh plugin --profile web add github:Lenandy/dsh-glass-skin
+```
 
-1. **`<profile>` 要填 DSH 实际加载的那个**——桌面版是 `desktop`。填错会**完全没有反应**：DSH 根本不会加载它，重启多少次都没用。
-2. **装完重启 DSH。** 刷新页面不够。
+装哪个就填哪个——**填错会完全没有反应**：DSH 不会加载它，重启多少次都没用。两边都装也可以，各填各的。
+
+装完**重启 DSH**。刷新页面不够。
+
+也可以打开页面上的**插件管理 → 添加插件**，把同一个地址粘进去。
 
 <details>
-<summary>不确定 profile 名？/ 怎么确认装上了</summary>
+<summary>怎么确认装上了 / 用的是别的 profile / 卸载</summary>
 
-查 DSH 实际加载的 profile：
+装上了的样子：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
+
+如果你用的不是 `desktop` 或 `web`（自建的 profile、TUI 等），从进程命令行里读它**实际加载**的那个名字——
+`--profile` 是必填项，填的就是这里读出来的值：
 
 ```powershell
 Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
   ForEach-Object { [regex]::Match([string]$_.CommandLine, 'profiles\\(\S+)').Groups[1].Value }
 ```
 
-装上了的样子：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
-
-卸载：
+卸载（把名字换成你装的那个）：
 
 ```sh
-dsh plugin --profile <profile> remove dsh-glass-skin
+dsh plugin --profile web remove dsh-glass-skin
 ```
 
 </details>
