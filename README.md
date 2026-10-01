@@ -5,8 +5,8 @@ DSH（DeepSeek Harness）Web UI 的**页面级玻璃皮肤**：会话画布与�
 
 | 开启皮肤 | 关闭皮肤（原版对照） |
 | :---: | :---: |
-| ![浅色](glass-light.png) | ![浅色原版](stock-light.png) |
-| ![深色](glass-dark.png) | ![深色原版](stock-dark.png) |
+| <img src="glass-light.png" width="384" alt="浅色"> | <img src="stock-light.png" width="384" alt="浅色原版"> |
+| <img src="glass-dark.png" width="384" alt="深色"> | <img src="stock-dark.png" width="384" alt="深色原版"> |
 
 ## 安装
 
