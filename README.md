@@ -26,6 +26,8 @@ dsh plugin --profile web add github:Lenandy/dsh-glass-skin
 
 装完**重启 DSH**。刷新页面不够。
 
+**装上了的样子**：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
+
 也可以打开页面上的**插件管理 → 添加插件**，把同一个地址粘进去。
 
 > 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
