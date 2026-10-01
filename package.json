@@ -1,0 +1,44 @@
+{
+  "name": "dsh-glass-skin",
+  "version": "0.2.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "description": "Acrylic-style glass skin for the DSH web UI: a translucent canvas and sidebar over a blurred backdrop, in the spirit of Windows Terminal's acrylic window.",
+  "keywords": ["dsh", "dsh-plugin", "deepseek-harness", "plugin", "theme", "skin", "glass", "acrylic"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lenandy/dsh-glass-skin.git"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "icon": "./icon.svg",
+  "meta": {
+    "title": "Glass Skin",
+    "description": "Acrylic glass skin for the DSH Web UI: a translucent canvas and sidebar over a blurred backdrop."
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  }
+}

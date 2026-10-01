@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>pending</title>
+<style>
+  :root { background: #0b0d10; }
+  html, body { margin: 0; height: 100%; }
+  #root { height: 100%; }
+
+  /* The REAL Windows layering, reproduced three deep: the frame paints the
+     SIDEBAR token across the whole window, then BOTH the centre column and the
+     view root paint the CANVAS token. Calibrating against fewer layers is what
+     made the shipped glass look more transparent on paper than in the product. */
+  .appShell { height: 100%; }
+  .frame { height: 100%; background: var(--dsw-specific-sidebar-fill); }
+  .center { height: 100%; background: var(--dsw-alias-bg-base); }
+  .viewRoot { height: 100%; background: var(--dsw-alias-bg-base); }
+
+  #report {
+    position: fixed; left: 0; top: 0; z-index: 2147483600; margin: 0; padding: 10px;
+    max-width: 44vw; max-height: 100vh; overflow: auto;
+    background: #000e; color: #9fe8ff;
+    font: 11px/1.45 ui-monospace, Consolas, monospace; white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="appShell">
+    <div class="frame">
+      <div class="center">
+        <div class="viewRoot"><h2>content</h2></div>
+      </div>
+    </div>
+  </div>
+</div>
+<pre id="report">pending</pre>
+
+<script>
+  window.__ModuleLoader__ = { load: function (definition) { window.__def = definition } }
+</script>
+<script src="lib/client.js"></script>
+<script>
+(function () {
+  var dark = /[?&]dark=1\b/.test(location.search)
+  var out = { requested: dark ? 'dark' : 'light' }
+  try {
+    if (dark) document.body.setAttribute('data-ds-dark-theme', '')
+
+    var mod = window.__def.factory(function (id) { throw new Error('no module: ' + id) })
+
+    var opaque = dark
+      ? { '--dsw-alias-bg-base': '#16181c', '--dsw-specific-sidebar-fill': '#101215',
+          '--dsw-specific-menu': '#22262c', '--dsw-alias-bg-overlay': '#1a1d22' }
+      : { '--dsw-alias-bg-base': '#ffffff', '--dsw-specific-sidebar-fill': '#f2f4f7',
+          '--dsw-specific-menu': '#ffffff', '--dsw-alias-bg-overlay': '#ffffff' }
+
+    var theme = {
+      getTheme: function () {
+        return { preference: dark ? 'dark' : 'light', fontSize: 14, revision: 1,
+                 active: { id: dark ? 'dark' : 'light', colorScheme: dark ? 'dark' : 'light', tokens: {} }, themes: [] }
+      },
+      setTheme: function (id) { out.setThemeCalledWith = id },
+      setFontSize: function () {},
+      register: function () { return function () {} },
+      // The product publishes its tokens as IMPORTANT inline custom properties,
+      // which a stylesheet cannot outrank. So the registered override layer is
+      // load-bearing, not belt-and-braces: the glass only exists because this
+      // runs with the plugin's translucent values. Model that faithfully.
+      overrideTokens: function (source, pairs) {
+        var mode = document.body.getAttribute('data-ds-dark-theme') !== null ? 'dark' : 'light'
+        Object.keys(pairs).forEach(function (token) {
+          document.body.style.setProperty(token, pairs[token][mode], 'important')
+        })
+        return function () {}
+      },
+    }
+
+    var handlers = {}
+    var ctx = {
+      theme: theme,
+      get: function (name) { return name === 'theme' ? theme : undefined },
+      on: function (event, handler) { handlers[event] = handler },
+    }
+    function fire(event) { if (typeof handlers[event] === 'function') handlers[event]() }
+
+    mod.apply(ctx)
+    var api = window.__dshGlassSkin
+    out.probeScheme = api.probe().scheme
+
+    function collect(root) {
+      var nodes = []
+      ;(function walk(node) {
+        for (var i = 0; i < node.children.length; i++) {
+          nodes.push(node.children[i])
+          walk(node.children[i])
+        }
+      })(root)
+      return nodes
+    }
+
+    var nodes = collect(api.panel(true))
+    function buttons() { return nodes.filter(function (node) { return node.tagName === 'BUTTON' }) }
+    function sliders() { return nodes.filter(function (node) { return node.type === 'range' }) }
+    function button(label) {
+      return buttons().filter(function (node) { return node.textContent === label })[0]
+    }
+    function summaryText() {
+      return nodes.filter(function (node) {
+        return typeof node.textContent === 'string' && node.textContent.indexOf('叠加后不透明度') !== -1
+      })[0].textContent
+    }
+
+    out.sliderCount = sliders().length
+    out.buttonLabels = buttons().map(function (node) { return node.textContent })
+    out.hasCloseControl = nodes.some(function (node) { return node.textContent === '\u00d7' })
+    out.hasDetails = nodes.some(function (node) { return node.tagName === 'PRE' })
+
+    out.summaryDefault = summaryText()
+    out.compositeDefault = api.layers().composite
+    out.alphaDefault = getComputedStyle(document.body).getPropertyValue('--dsw-alias-bg-base').trim()
+
+    // Each preset must land in a visibly different band, and none may go opaque.
+    out.presets = {}
+    ;['通透', '标准', '厚重'].forEach(function (label) {
+      var target = button(label)
+      if (target === undefined) {
+        out.presets[label] = 'MISSING'
+        return
+      }
+      target.dispatchEvent(new Event('click'))
+      // A preset re-renders the console, so re-collect before the next click.
+      nodes = collect(api.panel(true))
+      out.presets[label] = {
+        composite: api.layers().composite,
+        alpha: getComputedStyle(document.body).getPropertyValue('--dsw-alias-bg-base').trim(),
+        summary: summaryText(),
+      }
+    })
+
+    out.verdict = api.diagnose().ok
+    out.reasons = api.diagnose().reasons
+  } catch (error) {
+    out.thrown = String(error && error.stack ? error.stack : error)
+  }
+
+  function writeReport() {
+    document.getElementById('report').textContent = JSON.stringify(out, null, 2)
+  }
+  writeReport()
+
+  // The wallpaper probes are asynchronous: `Image` settles on a later task, and
+  // the bug being guarded against is exactly what happens when it settles as an
+  // error — the backdrop used to paint nothing and the whole window went black.
+  function probeWallpaper(label, url, next) {
+    api.wallpaper(url)
+    setTimeout(function () {
+      var backdrop = document.querySelector('div[data-dsh-glass-skin-backdrop]')
+      out.wallpapers[label] = {
+        photoVar: getComputedStyle(document.documentElement).getPropertyValue('--dsh-glass-skin-photo').trim() || null,
+        backdropStillHasGradient: getComputedStyle(backdrop).backgroundImage.indexOf('radial-gradient') !== -1,
+      }
+      next()
+    }, 500)
+  }
+
+  out.wallpapers = {}
+  // Every case stays offline: a data URL is a valid picture address, and a
+  // search-results link can CARRY one. To exercise a real remote picture, put
+  // its https:// address in PICTURE and run this page with network access.
+  var PICTURE = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8">'
+    + '<rect width="8" height="8" fill="%23cc3333"/></svg>'
+  var SEARCH_LINK = 'https://search.example/images?view=detailV2&mediaurl='
+    + encodeURIComponent(PICTURE) + '&q=test'
+
+  probeWallpaper('broken', 'https://127.0.0.1:1/nope.png', function () {
+    probeWallpaper('dataUrl', PICTURE, function () {
+      probeWallpaper('searchLink', SEARCH_LINK, function () {
+        probeWallpaper('notAPicture', 'https://search.example/images?q=test', function () {
+
+          // ---- the reported bug: switching the colour scheme ----------------
+          // The product switches schemes in three steps: publish the attribute,
+          // re-publish its own token map, notify plugins. Step 2 replaces the
+          // registered override layer with the theme's own (opaque) values, so
+          // the skin MUST restack in step 3 or the glass silently reverts to
+          // "1 layer, 100%" until something else restacks it by hand.
+          out.schemeSwitch = { from: dark ? 'dark' : 'light', to: dark ? 'light' : 'dark' }
+          out.schemeSwitch.compositeBefore = api.layers().composite
+
+          var target = dark
+            ? { '--dsw-alias-bg-base': '#ffffff', '--dsw-specific-sidebar-fill': '#f2f4f7',
+                '--dsw-specific-menu': '#ffffff', '--dsw-alias-bg-overlay': '#ffffff' }
+            : { '--dsw-alias-bg-base': '#16181c', '--dsw-specific-sidebar-fill': '#101215',
+                '--dsw-specific-menu': '#22262c', '--dsw-alias-bg-overlay': '#1a1d22' }
+
+          if (dark) document.body.removeAttribute('data-ds-dark-theme')
+          else document.body.setAttribute('data-ds-dark-theme', '')
+          Object.keys(target).forEach(function (token) {
+            document.body.style.setProperty(token, target[token], 'important')
+          })
+          fire('theme/change')
+
+          out.schemeSwitch.compositeAfterEvent = api.layers().composite
+          out.schemeSwitch.tokenAfterEvent = getComputedStyle(document.body)
+            .getPropertyValue('--dsw-alias-bg-base').trim()
+
+          // What the reporter had to do by hand. If this differs from the line
+          // above, the event handler is missing something a preset click does.
+          var preset = collect(api.panel(true)).filter(function (node) {
+            return node.tagName === 'BUTTON' && node.textContent === '标准'
+          })[0]
+          if (preset) preset.dispatchEvent(new Event('click'))
+          out.schemeSwitch.compositeAfterManualPreset = api.layers().composite
+
+          writeReport()
+          document.title = 'READY'
+        })
+      })
+    })
+  })
+})()
+</script>
+</body>
+</html>

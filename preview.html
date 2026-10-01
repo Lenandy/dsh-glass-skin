@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN" data-windows-titlebar>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>dsh-glass-skin 预览</title>
+<style>
+  /* ===================================================================
+     Mock of the DSH dark palette. Stand-in values for the real `--dsw-*`
+     tokens, defined on :root so the skin's own overrides (which the theme
+     service writes as inline custom properties on <body>) win here exactly
+     as they do in the product.
+     =================================================================== */
+  :root {
+    --dsw-alias-bg-base: #16181c;
+    --dsw-specific-sidebar-fill: #101215;
+    --dsw-specific-menu: #22262c;
+    --dsw-alias-bg-layer-1: #1b1e23;
+    --dsw-alias-bg-layer-2: #202429;
+    --dsw-alias-bg-overlay: #1a1d22;
+    --dsw-alias-border-l1: rgba(255,255,255,.07);
+    --dsw-alias-border-l2: rgba(255,255,255,.11);
+    --dsw-alias-border-l3: rgba(255,255,255,.06);
+    --dsw-alias-label-primary: #f2f4f7;
+    --dsw-alias-label-secondary: #a8b0ba;
+    --dsw-alias-label-tertiary: #7d858f;
+    --dsw-alias-label-caption: #6b7280;
+    --dsw-alias-brand-primary: #4176e6;
+    --dsw-alias-state-success-primary: #22c55e;
+    --dsw-alias-interactive-bg-hover: rgba(255,255,255,.06);
+    --dsw-menu-backdrop-filter: blur(40px) saturate(150%);
+    --dsw-radius-sm: 6px;
+    --dsw-radius-md: 10px;
+    --dsw-radius-lg: 14px;
+    --dsw-font-family: "Segoe UI", system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+    --dsh-windows-titlebar-height: 36px;
+
+    color-scheme: dark;
+    font-family: var(--dsw-font-family);
+    background: #0b0d10;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { color: var(--dsw-alias-label-primary); font-size: 13px; }
+
+  /* ---------------------------------------------------------------
+     A miniature of the shell's composition, with the SAME stacking the
+     product has. This matters: the window-wide chrome fill lives one
+     level BELOW #root (the skin clears #root's own background), and the
+     canvas token is painted twice — by the centre column and again by
+     the view root. That is three fills over the conversation and two
+     over the sidebar, which is what the console reports.
+     --------------------------------------------------------------- */
+  #root { height: 100%; }
+
+  .frame {
+    height: 100%; display: grid;
+    grid-template-rows: var(--dsh-windows-titlebar-height) minmax(0, 1fr);
+    background: var(--dsw-specific-sidebar-fill);
+  }
+
+  .chrome {
+    display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    border-bottom: .5px solid var(--dsw-alias-border-l3);
+  }
+  .chrome .mark {
+    width: 18px; height: 18px; border-radius: 5px; flex: none;
+    background: linear-gradient(140deg, #6f8fd8, #4176e6);
+  }
+  .chrome .name { font-size: 12px; letter-spacing: .04em; color: var(--dsw-alias-label-secondary); }
+  .chrome .spacer { flex: 1; }
+  .chrome .cap { display: flex; gap: 2px; }
+  .chrome .cap i {
+    width: 40px; height: 26px; border-radius: 4px; display: grid; place-items: center;
+    font-style: normal; color: var(--dsw-alias-label-tertiary); font-size: 11px;
+  }
+  .chrome .cap i:hover { background: var(--dsw-alias-interactive-bg-hover); }
+
+  .work { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 0; }
+
+  .sidebar { padding: 6px 12px; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+  .new {
+    display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 10px 0 8px;
+    border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-primary);
+  }
+  .new:hover { background: var(--dsw-alias-interactive-bg-hover); }
+  .new .plus { width: 16px; text-align: center; color: var(--dsw-alias-label-tertiary); }
+  .section {
+    margin: 12px 0 4px; padding: 0 8px; font-size: 11px;
+    color: var(--dsw-alias-label-caption); letter-spacing: .06em;
+  }
+  .row {
+    height: 34px; border-radius: 8px; display: flex; align-items: center; gap: 8px;
+    padding: 0 8px; color: var(--dsw-alias-label-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row.active { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+  .row .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--dsw-alias-state-success-primary); }
+  .row.idle .dot { background: var(--dsw-alias-label-caption); }
+
+  /* The centre column and the view root both paint the canvas token, exactly
+     as BynINW_centerCol and Dc7zOa_root do. */
+  .content {
+    background: var(--dsw-alias-bg-base);
+    border-radius: 16px 0 0 0;
+    display: flex; flex-direction: column; min-width: 0; min-height: 0;
+    overflow: hidden;
+  }
+  .viewRoot {
+    background: var(--dsw-alias-bg-base);
+    display: flex; flex-direction: column; min-height: 0; flex: 1;
+  }
+
+  .head {
+    flex: none; display: flex; align-items: center; gap: 14px;
+    padding: 0 20px; height: 48px; border-bottom: .5px solid var(--dsw-alias-border-l3);
+  }
+  .head .title { font-size: 14px; font-weight: 500; }
+  .tabs { display: flex; gap: 2px; margin-left: auto; }
+  .tab {
+    padding: 6px 10px; border-radius: var(--dsw-radius-sm); font-size: 12px;
+    color: var(--dsw-alias-label-tertiary);
+  }
+  .tab.on { color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-interactive-bg-hover); }
+
+  .flow { flex: 1; min-height: 0; overflow: auto; padding: 22px 0 8px; }
+  .flow > * { width: min(760px, 100%); margin: 0 auto 18px; padding: 0 24px; }
+
+  .me {
+    max-width: 78%; background: var(--dsw-alias-bg-layer-2);
+    border: .5px solid var(--dsw-alias-border-l2); border-radius: 12px;
+    padding: 9px 13px; color: var(--dsw-alias-label-primary); margin-left: auto;
+  }
+  .say { color: var(--dsw-alias-label-primary); line-height: 1.7; }
+  .say p { margin: 0 0 10px; }
+  .say code {
+    font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+    background: var(--dsw-alias-bg-layer-1); border: .5px solid var(--dsw-alias-border-l1);
+    border-radius: 5px; padding: 1px 5px;
+  }
+  .card {
+    background: var(--dsw-alias-bg-layer-1); border: .5px solid var(--dsw-alias-border-l1);
+    border-radius: var(--dsw-radius-md); padding: 10px 12px;
+    font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+    color: var(--dsw-alias-label-secondary);
+  }
+  .card .tag { color: var(--dsw-alias-label-caption); }
+
+  .composer { flex: none; padding: 0 24px 22px; }
+  .composer .box {
+    width: min(760px, 100%); margin: 0 auto;
+    background: var(--dsw-alias-bg-layer-2);
+    border: .5px solid var(--dsw-alias-border-l2);
+    border-radius: var(--dsw-radius-lg);
+    box-shadow: 0 3px 8px rgba(0,0,0,.28), 0 0 20px rgba(0,0,0,.22);
+    padding: 12px 14px;
+    display: flex; align-items: flex-end; gap: 12px;
+  }
+  .composer .ph { flex: 1; color: var(--dsw-alias-label-caption); }
+  .composer .send {
+    width: 28px; height: 28px; border-radius: 50%; flex: none;
+    background: var(--dsw-alias-brand-primary); display: grid; place-items: center;
+    color: #fff; font-size: 13px;
+  }
+
+  /* A note about the two query switches, styled as part of the mock shell. */
+  .note {
+    position: fixed; left: 14px; bottom: 14px; z-index: 5;
+    font-size: 11px; line-height: 1.6; color: var(--dsw-alias-label-tertiary);
+    background: var(--dsw-alias-bg-layer-2);
+    border: .5px solid var(--dsw-alias-border-l2);
+    border-radius: var(--dsw-radius-md); padding: 8px 10px;
+  }
+  .note code { color: var(--dsw-alias-label-secondary); }
+</style>
+</head>
+<!-- The mock palette above is the dark one, so the mock declares the dark
+     scheme the same way DSH's presenter does. Without this the skin's
+     scheme-aware forcing applies the LIGHT glass to a dark mock, and light
+     labels end up on light glass. -->
+<body data-ds-dark-theme>
+
+<div id="root">
+  <div class="frame">
+    <div class="chrome">
+      <div class="mark"></div>
+      <div class="name">DEEPSEEK HARNESS</div>
+      <div class="spacer"></div>
+      <div class="cap"><i>&#8211;</i><i>&#9633;</i><i>&#10005;</i></div>
+    </div>
+
+    <div class="work">
+      <div class="sidebar">
+        <div class="new"><span class="plus">+</span><span>新建会话</span></div>
+        <!-- Fictional demo content, deliberately generic: the screenshots taken
+             from this page ship with the repository. Never paste real sessions,
+             real project names, or real file paths in here. -->
+        <div class="section">今天</div>
+        <div class="row active"><span class="dot"></span><span>亚克力玻璃皮肤介绍</span></div>
+        <div class="row"><span class="dot"></span><span>插件安装说明</span></div>
+        <div class="row idle"><span class="dot"></span><span>主题令牌速查</span></div>
+        <div class="section">更早</div>
+        <div class="row idle"><span class="dot"></span><span>设计令牌对照表</span></div>
+        <div class="row idle"><span class="dot"></span><span>发布检查清单</span></div>
+      </div>
+
+      <div class="content">
+        <div class="viewRoot">
+          <div class="head">
+            <div class="title">亚克力玻璃皮肤介绍</div>
+            <div class="tabs"><div class="tab on">对话</div><div class="tab">轨迹</div></div>
+          </div>
+
+          <div class="flow">
+            <div class="me">这个玻璃效果是怎么做的？</div>
+
+            <div class="say">
+              <p>只动外观：给四个「外观面」令牌加上 alpha 通道，再铺一层重模糊的背景。</p>
+              <p>卡片和气泡<strong>保持实心</strong>——这是文字可读性的底线，也是这套皮肤唯一不让步的地方。</p>
+            </div>
+
+            <div class="card"><span class="tag">$</span> dsh plugin --profile &lt;profile&gt; add -w ./dsh-glass-skin</div>
+
+            <div class="say">
+              <p>面板上看到的就是这个效果：玻璃在底层，内容依然清晰。</p>
+            </div>
+          </div>
+
+          <div class="composer">
+            <div class="box">
+              <div class="ph">给 DeepSeek Harness 发消息…</div>
+              <div class="send">&#8593;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  这个页面加载的是真实产物 <code>lib/client.js</code>。<br />
+  右下角圆钮 = 皮肤自己的控制台。<br />
+  <code>?skin=off</code> 对比关闭效果 · <code>?panel=1</code> 强制打开控制台
+</div>
+
+<!-- 1. Stand in for the client module loader. -->
+<script>
+  window.__ModuleLoader__ = {
+    load: function (definition) { window.__glassDefinition = definition },
+  }
+</script>
+
+<!-- 2. Load the real bundle — the same file DSH serves. -->
+<script src="lib/client.js"></script>
+
+<!-- 3. Run its factory against a stub theme service, exactly as the shell does. -->
+<script>
+  (function () {
+    var definition = window.__glassDefinition
+    if (!definition) { console.error('[preview] bundle did not register'); return }
+
+    var mod = definition.factory(function (id) {
+      throw new Error('[preview] module table has no "' + id + '"')
+    })
+
+    var theme = {
+      getTheme: function () {
+        return {
+          preference: 'dark',
+          fontSize: 14,
+          revision: 1,
+          active: { id: 'dark', colorScheme: 'dark', tokens: {} },
+          themes: [],
+        }
+      },
+      setTheme: function (id) { console.log('[preview] setTheme("' + id + '")') },
+      setFontSize: function () {},
+      register: function () { return function () {} },
+      // The real ThemePresenter applies alias overrides as inline custom
+      // properties on <body>; mirroring that is what proves the skin's forced
+      // values beat the opaque mock palette above.
+      overrideTokens: function (source, pairs) {
+        Object.keys(pairs).forEach(function (token) {
+          document.body.style.setProperty(token, pairs[token].dark)
+        })
+        return function () {}
+      },
+    }
+
+    mod.apply({ theme: theme, get: function (name) { return name === 'theme' ? theme : undefined } })
+
+    // `preview.html?skin=off` renders the same mock without the skin. `false` =
+    // do not persist: every file:// page shares one origin, so a saved "off"
+    // would silently disable the skin in every later load.
+    if (/[?&]skin=off\b/.test(location.search)) {
+      window.__dshGlassSkin.off(false)
+    }
+
+    // `preview.html?panel=1` opens the console, so it can be reviewed without
+    // clicking through — the same control the product shows.
+    if (/[?&]panel=1\b/.test(location.search)) {
+      window.__dshGlassSkin.panel(true)
+    }
+  })()
+</script>
+</body>
+</html>

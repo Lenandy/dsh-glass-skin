@@ -1,0 +1,23 @@
+# This package has no dependencies; there is nothing to lock.
+node_modules/
+
+# OS and editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Local scratch
+*.log
+*.local
+
+# Local design notes: deliberately not published.
+docs/
+
+# A screen capture lands in whatever directory is focused, which can be this
+# package — and it captures whatever the window was showing. Ignore the default
+# names so a raw, unredacted screenshot can never be swept into a commit by an
+# untargeted `git add`. Ship the ones you mean to publish by naming them.
+屏幕截图*.png
+Screenshot*.png
