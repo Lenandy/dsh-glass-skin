@@ -11,36 +11,41 @@ DSH（DeepSeek Harness）Web UI 的**页面级玻璃皮肤**：会话画布与�
 ## 安装
 
 ```sh
-dsh plugin --profile <profile> add github:Lenandy/dsh-glass-skin   # 从 GitHub（不必先发布）
-dsh plugin --profile <profile> add dsh-glass-skin                  # 从 npm（发布后）
-dsh plugin --profile <profile> add -w /path/to/dsh-glass-skin      # 本机仓库（开发）
+dsh plugin --profile <profile> add github:Lenandy/dsh-glass-skin
 ```
 
-- **`<profile>` 必须填对，填错会完全没有反应**——bundle 层根本不会被组合，重启多少次都没用。桌面版用的是 `desktop`。
-- 装完**重启 DSH**：新 bundle 要重新组合 loader 树，刷新页面不够。
-- 回滚：`dsh plugin --profile <profile> remove dsh-glass-skin`
+也可以打开页面上的**插件管理 → 添加插件**，把上面那个地址粘进去。
 
-> 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
+两件必须注意的事：
+
+1. **`<profile>` 要填 DSH 实际加载的那个**——桌面版是 `desktop`。填错会**完全没有反应**：DSH 根本不会加载它，重启多少次都没用。
+2. **装完重启 DSH。** 刷新页面不够。
 
 <details>
-<summary>怎么查 profile 名 / 装完怎么确认</summary>
+<summary>不确定 profile 名？/ 怎么确认装上了</summary>
+
+查 DSH 实际加载的 profile：
 
 ```powershell
 Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
   ForEach-Object { [regex]::Match([string]$_.CommandLine, 'profiles\\(\S+)').Groups[1].Value }
 ```
 
-- 用本机路径安装时 **`-w` 是必需的**：profile 目录自带 `pnpm-workspace.yaml`，pnpm 会把它当成 workspace 根，裸 `add` 会报 `ERR_PNPM_ADDING_TO_ROOT`。
-- **确认装上了**：重启后右下角出现圆钮，控制台标题里能读到版本号。
-- ⚠️ 别拿 `http://127.0.0.1:<port>/plugins/dsh-glass-skin/client.js` 当证据——桌面版不走这条 HTTP 路由，
-  **所有**包（含官方包）都是 404，它证明不了任何事。
-- 页面上的**插件管理 → 添加插件**接受同一套 spec（包名、Git 地址、tarball、绝对本地路径），和 `dsh plugin` 共用同一套包操作。
+装上了的样子：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
+
+卸载：
+
+```sh
+dsh plugin --profile <profile> remove dsh-glass-skin
+```
 
 </details>
 
+> 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
+
 ## 特性
 
-- **真玻璃，不是贴图**——给四个「外观面」令牌加 alpha 通道，再铺一层重模糊背景；卡片、气泡、输入框保持实心，所以文字始终清晰。
+- **真玻璃，不是贴图**——玻璃是真的半透明，它后面的背景也是真的在模糊。卡片、气泡和输入框保持实心，所以文字始终清晰。
 - **控制台**——右下角圆钮，纯鼠标操作，不需要 DevTools。
 - **明暗各自独立**——浓度和遮罩按配色分开保存：同一组数值在浅色下是死白，在深色下却是层次。
 - **三个预设**——通透 / 标准 / 厚重，一键设好，不用自己试。
@@ -73,8 +78,7 @@ Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
 
 ## 已知边界
 
-- **不是真·亚克力。** 拖动窗口时玻璃后面的内容不会跟着动——背景是页面自己铺的一层图。真正的窗口材质需要 Electron 的
-  `backgroundMaterial`，而 DSH 桌面版的窗口归主进程所有，插件层够不到。
+- **不是真·亚克力**——背景是插件自己铺的一层图，所以拖动窗口时它不会跟着动。要让窗口本身变成系统材质，得由 DSH 客户端来做，插件做不到。
 - 玻璃面板后面若有高对比内容，文字对比度会下降；调大「遮罩」即可。
 
 ## 隐私
@@ -84,4 +88,4 @@ Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
 
 ## 许可
 
-[MIT](LICENSE)。
+[MIT](LICENSE)
