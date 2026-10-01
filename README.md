@@ -16,7 +16,7 @@ DSH（DeepSeek Harness）Web UI 的**页面级玻璃皮肤**：会话画布与�
 dsh plugin --profile desktop add github:Lenandy/dsh-glass-skin
 ```
 
-**浏览器 / 命令行**（`dsh web`）：
+**浏览器**（`dsh web`）：
 
 ```sh
 dsh plugin --profile web add github:Lenandy/dsh-glass-skin
