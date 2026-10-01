@@ -10,25 +10,22 @@ DSH（DeepSeek Harness）Web UI 的**页面级玻璃皮肤**：会话画布与�
 
 ## 安装
 
-**桌面客户端**（`DeepSeek Harness.exe`）用 `desktop`：
+**桌面客户端**（`DeepSeek Harness.exe`）：
 
 ```sh
 dsh plugin --profile desktop add github:Lenandy/dsh-glass-skin
 ```
 
-**浏览器 / 命令行**（`dsh web`）用 `web`：
+**浏览器 / 命令行**（`dsh web`）：
 
 ```sh
 dsh plugin --profile web add github:Lenandy/dsh-glass-skin
 ```
 
-装哪个就填哪个——**填错会完全没有反应**：DSH 不会加载它，重启多少次都没用。两边都装也可以，各填各的。
+安装后需重启 DSH。加载成功的标志：
 
-装完**重启 DSH**。刷新页面不够。
-
-**装上了的样子**：重启后右下角出现那个圆钮，点开控制台，标题里能读到版本号。
-
-也可以打开页面上的**插件管理 → 添加插件**，把同一个地址粘进去。
+- 右下角出现圆形按钮
+- 打开控制台，标题显示版本号
 
 > 在 DSH 桌面版 `0.2.0-rc.2`（Electron 44 / Chrome 152）上实测。
 
