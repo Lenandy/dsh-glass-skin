@@ -59,19 +59,6 @@ Get-CimInstance Win32_Process -Filter "Name='DeepSeek Harness.exe'" |
 | **壁纸** | 见下一节。右侧三个图标按钮：**选图** · **用** · **清除** |
 | **关闭皮肤 / 详情 / 重置** | 「详情」是完整诊断报告；「重置」恢复全部默认，与壁纸那个「清除」不是一回事 |
 
-标题下方那行是核心读数：`深色模式 · 3 层 · 叠加后不透明度 59%`。每动一下就实时重绘并写回 `localStorage`。
-
-也可以在 DevTools 里调（桌面版 `F12`）：
-
-```js
-__dshGlassSkin.glass(0.5)                        // 浓度，1 = 出厂
-__dshGlassSkin.blur('80px')                      // 背景模糊半径
-__dshGlassSkin.wash(0.5)                         // 遮罩 0–1
-__dshGlassSkin.wallpaper('https://…/w.jpg')      // 换壁纸（'' 恢复内置背景）
-__dshGlassSkin.off() / .on() / .reset()
-__dshGlassSkin.probe() / .layers() / .diagnose() // 出问题时先取证
-```
-
 ## 壁纸
 
 | 你手上是什么 | 怎么做 |
@@ -88,28 +75,12 @@ __dshGlassSkin.probe() / .layers() / .diagnose() // 出问题时先取证
 
 - **不是真·亚克力。** 拖动窗口时玻璃后面的内容不会跟着动——背景是页面自己铺的一层图。真正的窗口材质需要 Electron 的
   `backgroundMaterial`，而 DSH 桌面版的窗口归主进程所有，插件层够不到。
-- **本地文件路径不能直接当壁纸。** `C:\…\a.jpg` 既不是合法 URL，页面也不允许读 `file://` 子资源——用「选图」。
 - 玻璃面板后面若有高对比内容，文字对比度会下降；调大「遮罩」即可。
 
 ## 隐私
 
 插件只改样式，**不采集、不上报任何数据**——所有偏好都存在你自己浏览器的 `localStorage` 里，卸载或点「重置」即清空。
 唯一的外发请求是**你填的壁纸地址**：由浏览器按你自己的网络直接取那张图，没有中转、没有统计。
-
-## 开发
-
-```sh
-node test/manifest.test.mjs   # 声明契约 + 插件管理器要的显示元数据
-node test/bundle.test.mjs     # 浏览器半边契约（无依赖）
-```
-
-三个自检页都**加载真实 `lib/client.js`**，不是另抄一遍实现：
-
-| 页面 | 用途 |
-|---|---|
-| `preview.html` | 零风险预览（`?skin=off` 看关闭对照、`?panel=1` 打开控制台） |
-| `scheme-check.html` | 配色切换 / 预设 / 壁纸四条路径的实测，全程离线 |
-| `perf-check.html` | 14k 节点长对话页面，数「主题服务被调用了几次」 |
 
 ## 许可
 
